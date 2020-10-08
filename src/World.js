@@ -115,8 +115,10 @@ export default class World {
     }
 
     adapt() {
-        for (let y = this.height - 1; y >= 0; y--) {
-            for (let x = this.width - 1; x >= 0; x--) {
+        let adaptedMap = this.createMap();
+
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
                 let body = this.map[y][x];
 
                 if (body) {
@@ -124,6 +126,8 @@ export default class World {
                 }
             }
         }
+
+        return adaptedMap;
     }
 
     update() {

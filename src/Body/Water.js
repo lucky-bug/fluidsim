@@ -28,6 +28,11 @@ export default class Water extends Body {
     draw() {
         push();
         fill("rgba(28, 163, 236, .75)");
+
+        if (this.circled) {
+            fill("#f00");
+        }
+
         super.draw();
         pop();
     }
