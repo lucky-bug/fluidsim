@@ -66,7 +66,7 @@ export default class Body extends WorldObject {
         stroke("rgba(0, 0, 0, .5)");
         strokeWeight(.1);
         let margin = .05;
-        rect(this.x + margin, this.y + margin, this.width - 2 * margin, this.height - 2 * margin, .2);
+        rect(this.x + margin, this.y + margin, this.width - 2 * margin, this.height - 2 * margin);
         pop();
     }
 }

@@ -33,25 +33,35 @@ function keyPressed() {
     }
 }
 
-function mouseDragged() {
-    let cur = createVector(Math.floor(mouseX / game.scale), Math.floor(mouseY / game.scale));
+function addBody() {
+    {
+        let cur = createVector(Math.floor(mouseX / game.scale), Math.floor(mouseY / game.scale));
 
-    for (let y = cur.y - brushSize; y <= cur.y + brushSize; y++) {
-        for (let x = cur.x - brushSize; x <= cur.x + brushSize; x++) {
-            let pos = createVector(x, y);
-            let body = game.world.createBody(pos, mouseButton);
+        for (let y = cur.y - brushSize; y <= cur.y + brushSize; y++) {
+            for (let x = cur.x - brushSize; x <= cur.x + brushSize; x++) {
+                let pos = createVector(x, y);
+                let body = game.world.createBody(pos, mouseButton);
 
-            if (Math.random() < 0) {
-                body.size.x = Math.max(1, Math.ceil(Math.random() * 4));
-                body.size.y = Math.max(1, Math.ceil(Math.random() * 4));
-            }
+                if (Math.random() < 0) {
+                    body.size.x = Math.max(1, Math.ceil(Math.random() * 4));
+                    body.size.y = Math.max(1, Math.ceil(Math.random() * 4));
+                }
 
-            if (game.world.isEmpty(body.pos, body.size)) {
-                game.world.add(body);
-            } else if (game.world.isEmpty(body.pos, createVector(1, 1))) {
-                body.size = createVector(1, 1);
-                game.world.add(body);
+                if (game.world.isEmpty(body.pos, body.size)) {
+                    game.world.add(body);
+                } else if (game.world.isEmpty(body.pos, createVector(1, 1))) {
+                    body.size = createVector(1, 1);
+                    game.world.add(body);
+                }
             }
         }
     }
+}
+
+function mouseClicked() {
+    addBody();
+}
+
+function mouseDragged() {
+    addBody();
 }
