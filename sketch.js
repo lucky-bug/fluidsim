@@ -1,6 +1,6 @@
 let game = new FluidSim.Game();
 let canvas = null;
-let brushSize = 1;
+let brushSize = 0;
 
 function setup() {
     canvas = createCanvas(game.width, game.height).canvas;
@@ -47,11 +47,11 @@ function addBody() {
                     body.size.y = Math.max(1, Math.ceil(Math.random() * 4));
                 }
 
-                if (game.world.isEmpty(body.pos, body.size)) {
-                    game.world.add(body);
-                } else if (game.world.isEmpty(body.pos, createVector(1, 1))) {
+                if (game.world.isEmpty(game.world.map, body.pos, body.size)) {
+                    game.world.add(game.world.map, body);
+                } else if (game.world.isEmpty(game.world.map, body.pos, createVector(1, 1))) {
                     body.size = createVector(1, 1);
-                    game.world.add(body);
+                    game.world.add(game.world.map, body);
                 }
             }
         }
