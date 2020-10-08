@@ -1,0 +1,16 @@
+{
+  "name": "fluidsim",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack",
+    "watch": "webpack --watch"
+  },
+  "dependencies": {
+    "p5": "^1.1.9",
+    "webpack": "^4.44.2",
+    "webpack-cli": "^3.3.12"
+  }
+}
