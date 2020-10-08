@@ -9,6 +9,7 @@ export default class Body extends WorldObject {
         this.acc = acc;
         this.size = size;
         this.circled = false;
+        this.updated = false;
     }
 
     get key() {

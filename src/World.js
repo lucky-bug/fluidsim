@@ -1,5 +1,7 @@
+import _ from "lodash";
 import { Vector } from "p5";
 import Body from "./Body";
+import Concrete from "./Body/Concrete";
 import Sand from "./Body/Sand";
 import Water from "./Body/Water";
 
@@ -28,21 +30,23 @@ export default class World {
             return new Water(this, pos);
         } else if (type === RIGHT) {
             return new Sand(this, pos);
+        } else {
+            return new Concrete(this, pos);
         }
     }
 
-    add(body) {
+    add(map, body) {
         for (let i = 0; i < body.height; i++) {
             for (let j = 0; j < body.width; j++) {
-                this.map[body.y + i][body.x + j] = body;
+                map[body.y + i][body.x + j] = body;
             }
         }
     }
 
-    delete(body) {
+    delete(map, body) {
         for (let i = 0; i < body.height; i++) {
             for (let j = 0; j < body.width; j++) {
-                this.map[body.y + i][body.x + j] = null;
+                map[body.y + i][body.x + j] = null;
             }
         }
     }
@@ -56,12 +60,12 @@ export default class World {
         );
     }
 
-    isEmpty(pos, size) {
+    isEmpty(map, pos, size) {
         if (!this.isInside(pos, size)) return false;
 
         for (let i = 0; i < size.y; i++) {
             for (let j = 0; j < size.x; j++) {
-                let body = this.map[pos.y + i][pos.x + j];
+                let body = map[pos.y + i][pos.x + j];
 
 
                 if (body && body.pos !== pos && body.size !== size) {
@@ -73,12 +77,12 @@ export default class World {
         return true;
     }
 
-    isFull(pos, size) {
-        if (!this.isInside(pos, size)) return true;
+    isFull(map, pos, size) {
+        if (!this.isInside(pos, size)) return false;
 
         for (let i = 0; i < size.y; i++) {
             for (let j = 0; j < size.x; j++) {
-                if (this.map[pos.y + i][pos.x + j] === null) {
+                if (map[pos.y + i][pos.x + j] === null) {
                     return false;
                 }
             }
@@ -87,16 +91,16 @@ export default class World {
         return true;
     }
 
-    isSame(pos, size) {
-        if (!this.map[pos.y][pos.x]) {
+    isSame(map, pos, size) {
+        if (!map[pos.y][pos.x]) {
             return false;
         }
 
-        let type = this.map[pos.y][pos.x].constructor.name;
+        let type = map[pos.y][pos.x].constructor.name;
 
         for (let i = 0; i < size.y; i++) {
             for (let j = 0; j < size.x; j++) {
-                if (!this.map[pos.y + i][pos.x + j] || this.map[pos.y + i][pos.x + j].constructor.name !== type) {
+                if (!map[pos.y + i][pos.x + j] || map[pos.y + i][pos.x + j].constructor.name !== type) {
                     return false;
                 }
             }
@@ -105,12 +109,12 @@ export default class World {
         return true;
     }
 
-    isCircled(body) {
+    isCircled(map, body) {
         return (
-            this.isFull(new Vector(body.x - 1, body.y - 1), new Vector(body.width + 2, 1)) &&
-            this.isFull(new Vector(body.x - 1, body.y), new Vector(1, body.height)) &&
-            this.isFull(new Vector(body.x - 1, body.y + body.height), new Vector(body.width + 2, 1)) &&
-            this.isFull(new Vector(body.x + body.width, body.y), new Vector(1, body.height))
+            this.isFull(map, new Vector(body.x - 1, body.y - 1), new Vector(body.width + 2, 1)) &&
+            this.isFull(map, new Vector(body.x - 1, body.y), new Vector(1, body.height)) &&
+            this.isFull(map, new Vector(body.x - 1, body.y + body.height), new Vector(body.width + 2, 1)) &&
+            this.isFull(map, new Vector(body.x + body.width, body.y), new Vector(1, body.height))
         );
     }
 
@@ -122,7 +126,34 @@ export default class World {
                 let body = this.map[y][x];
 
                 if (body) {
-                    body.circled = this.isCircled(body);
+                    body.circled = this.isCircled(this.map, body);
+                }
+            }
+        }
+
+        for (let y = 1; y < this.height - 1; y++) {
+            for (let x = 1; x < this.width - 1; x++) {
+                let body = this.map[y][x];
+
+                if (body && body.x == x && body.y == y && body.circled) {
+                    let newBody = new body.constructor(body.world, new Vector(x, y));
+                    let adapted = true;
+
+                    while (adapted) {
+                        adapted = false;
+
+                        if (
+                            this.isInside(new Vector(newBody.x + newBody.width, newBody.y), new Vector(newBody.x + newBody.width, newBody.y + newBody.height - 1)) &&
+                            this.isFull(this.map, new Vector(newBody.x + newBody.width, newBody.y), new Vector(newBody.x + newBody.width, newBody.y + newBody.height - 1)) &&
+                            this.isSame(this.map, new Vector(newBody.x + newBody.width, newBody.y), new Vector(newBody.x + newBody.width, newBody.y + newBody.height - 1)) &&
+                            this.map[newBody.y][newBody.x + newBody.width].constructor.name == newBody.constructor.name
+                        ) {
+                            newBody.size.x++;
+                            adapted = true;
+                        }
+                    }
+
+                    adaptedMap[y][x] = newBody;
                 }
             }
         }
@@ -131,32 +162,41 @@ export default class World {
     }
 
     update() {
+        let map = this.map;
+
         for (let y = this.height - 1; y >= 0; y--) {
             for (let x = 0; x < this.width; x++) {
                 let body = this.map[y][x];
 
-                if (body && body.y === y && body.x === x) {
+                if (body && !body.updated && body.y === y && body.x === x) {
                     let nextPos = body.nextPos;
 
-                    if (this.isEmpty(nextPos, body.size)) {
-                        this.delete(body);
+                    this.delete(map, body);
+
+                    if (this.isEmpty(map, nextPos, body.size)) {
                         body.update();
-                        this.add(body);
                     }
+
+                    body.updated = true;
+
+                    this.add(map, body);
                 }
             }
         }
 
-        this.adapt();
+        this.map = map;
     }
 
     draw() {
+        let map = this.map;
+
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
-                let body = this.map[y][x];
+                let body = map[y][x];
 
                 if (body && body.y === y && body.x === x) {
                     body.draw();
+                    body.updated = false;
                 }
             }
         }
