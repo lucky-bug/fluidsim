@@ -65,3 +65,7 @@ function mouseClicked() {
 function mouseDragged() {
     addBody();
 }
+
+function touchMoved() {
+    addBody();
+}
