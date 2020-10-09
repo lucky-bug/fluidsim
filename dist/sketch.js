@@ -1,71 +1,73 @@
-let game = new FluidSim.Game();
+const WIDTH = 900;
+const HEIGHT = 500;
+const SCALE = 5;
+
+let game = new FluidSim.Game(WIDTH, HEIGHT, SCALE);
 let canvas = null;
-let brushSize = 0;
 
 function setup() {
-    canvas = createCanvas(game.width, game.height).canvas;
+    canvas = createCanvas(WIDTH, HEIGHT).canvas;
     canvas.addEventListener("contextmenu", (e) => e.preventDefault());
-    noStroke();
+    // frameRate(1);
 }
 
 function draw() {
-    scale(game.scale);
+    updateStats();
+    scale(SCALE);
+    noStroke();
     background("#333");
     game.update();
     game.draw();
+}
 
+function updateStats() {
     let statusBar = document.querySelector('stats');
-    let stats = game.stats;
-    let statsText = "";
+    let stats = {
+        Bodies: `${game.bodies.length}`,
+        Cursor: `${game.cursor.x},${game.cursor.y} (${game.cursor.size})`,
+        Scale: SCALE,
+        FPS: Math.round(frameRate())
+    };
+    let statsHtml = "";
 
     for (const stat in stats) {
-        statsText += ` <span><b>${stat}</b>: ${stats[stat]}</span>`;
+        statsHtml += ` <span><b>${stat}</b>: ${stats[stat]}</span>`;
     }
 
-    statusBar.innerHTML = `<b>${game.paused ? "Paused": ""}</b><span>${statsText}</span>`;
+    statusBar.innerHTML = `<span><b>${game.paused ? "Paused": ""}</b></span><span>${statsHtml}</span>`;
 }
 
-function keyPressed() {
-    if (keyCode === 32) {
-        game.paused ^= true;
-    } else if (keyCode === 8) {
-        game.world.map = game.world.createMap();
-    }
+function mouseMoved() {
+    game.updateCursor(mouseX, mouseY, false, mouseButton);
 }
 
-function addBody() {
-    {
-        let cur = createVector(Math.floor(mouseX / game.scale), Math.floor(mouseY / game.scale));
+function mouseDragged() {
+    game.updateCursor(mouseX, mouseY, true, mouseButton);
+}
 
-        for (let y = cur.y - brushSize; y <= cur.y + brushSize; y++) {
-            for (let x = cur.x - brushSize; x <= cur.x + brushSize; x++) {
-                let pos = createVector(x, y);
-                let body = game.world.createBody(pos, mouseButton);
+function mousePressed() {
+    game.updateCursor(mouseX, mouseY, true, mouseButton);
+}
 
-                if (Math.random() < 0) {
-                    body.size.x = Math.max(1, Math.ceil(Math.random() * 4));
-                    body.size.y = Math.max(1, Math.ceil(Math.random() * 4));
-                }
+function mouseReleased() {
+    game.updateCursor(mouseX, mouseY, false, mouseButton);
+}
 
-                if (game.world.isEmpty(game.world.map, body.pos, body.size)) {
-                    game.world.add(game.world.map, body);
-                } else if (game.world.isEmpty(game.world.map, body.pos, createVector(1, 1))) {
-                    body.size = createVector(1, 1);
-                    game.world.add(game.world.map, body);
-                }
-            }
+function mouseWheel(event) {
+    if (event.delta > 0) {
+        game.cursor.size++;
+    } else {
+        game.cursor.size--;
+        if (game.cursor.size == 0) {
+            game.cursor.size = 1;
         }
     }
 }
 
-function mouseClicked() {
-    addBody();
-}
-
-function mouseDragged() {
-    addBody();
-}
-
-function touchMoved() {
-    addBody();
+function keyPressed() {
+    if (keyCode == 32) {
+        game.paused ^= true;
+    } else if (keyCode == 65) {
+        game.adaptation ^= true;
+    }
 }
