@@ -23,6 +23,7 @@ function draw() {
 function updateStats() {
     let statusBar = document.querySelector('stats');
     let stats = {
+        Adaptation: `${game.adaptation ? "ON" : "OFF"}`,
         Bodies: `${game.bodies.length}`,
         Cursor: `${game.cursor.x},${game.cursor.y} (${game.cursor.size})`,
         Scale: SCALE,
